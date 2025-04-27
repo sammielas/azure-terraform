@@ -1,37 +1,40 @@
 # vnet.tf
+resource "random_pet" "lb_hostname" {}
+
 resource "azurerm_resource_group" "main" {
-  name     = "${local.resource_name}-rg"
+  name     = "${var.resource_prefix}-${var.environment}-rg"
   location = var.location
-  tags     = local.common_tags
 }
 
 resource "azurerm_virtual_network" "main" {
-  name                = "${local.resource_name}-vnet"
+  name                = "${var.resource_prefix}-${var.environment}-vnet"
   address_space       = var.vnet_address_space
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  tags                = local.common_tags
+
+  tags = {
+    environment = var.environment
+  }
 }
 
 resource "azurerm_subnet" "app" {
-  name                 = "${local.resource_name}-app-subnet"
+  name                 = "${var.resource_prefix}-${var.environment}-app-subnet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.app_subnet_prefix]
 }
 
 resource "azurerm_subnet" "mgmt" {
-  name                 = "${local.resource_name}-mgmt-subnet"
+  name                 = "${var.resource_prefix}-${var.environment}-mgmt-subnet"
   resource_group_name  = azurerm_resource_group.main.name
   virtual_network_name = azurerm_virtual_network.main.name
   address_prefixes     = [var.mgmt_subnet_prefix]
 }
 
 resource "azurerm_network_security_group" "app" {
-  name                = "${local.resource_name}-app-nsg"
+  name                = "${var.resource_prefix}-${var.environment}-app-nsg"
   location            = azurerm_resource_group.main.location
   resource_group_name = azurerm_resource_group.main.name
-  tags                = local.common_tags
 
   dynamic "security_rule" {
     for_each = var.environment == "prod" ? [1] : []
