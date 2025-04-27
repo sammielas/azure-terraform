@@ -15,17 +15,18 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "main" {
   instances                   = 2
   platform_fault_domain_count = 1
 
-  user_data_base64 = base64encode(file("user-data.sh"))
-
-  os_profile {
+  
+   os_profile {
     linux_configuration {
       disable_password_authentication = true
-      admin_username                  = var.admin_username
+      admin_username                  = "azureuser"
       admin_ssh_key {
-        username   = var.admin_username
-        public_key = file(var.ssh_public_key)
+        username   = "azureuser"
+        public_key = file("~/.ssh/id_rsa.pub")
       }
     }
+
+    custom_data = base64encode(file("user-data.sh"))
   }
 
   source_image_reference {
