@@ -1,22 +1,37 @@
 # vmss.tf
-resource "azurerm_linux_virtual_machine_scale_set" "main" {
-  name                = "${local.resource_name}-vmss"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
-  sku                 = local.vm_size
-  instances           = 2
-  admin_username      = "adminuser"
-  tags                = local.common_tags
+locals {
+  vm_size = {
+    dev   = "Standard_B1s"
+    stage = "Standard_B2s"
+    prod  = "Standard_B2ms"
+  }
+}
 
-  admin_ssh_key {
-    username   = "adminuser"
-    public_key = file("~/.ssh/id_rsa.pub")
+resource "azurerm_orchestrated_virtual_machine_scale_set" "main" {
+  name                        = "${var.resource_prefix}-${var.environment}-vmss"
+  resource_group_name         = azurerm_resource_group.main.name
+  location                    = azurerm_resource_group.main.location
+  sku_name                    = local.vm_size[var.environment]
+  instances                   = 2
+  platform_fault_domain_count = 1
+
+  user_data_base64 = base64encode(file("user-data.sh"))
+
+  os_profile {
+    linux_configuration {
+      disable_password_authentication = true
+      admin_username                  = var.admin_username
+      admin_ssh_key {
+        username   = var.admin_username
+        public_key = file(var.ssh_public_key)
+      }
+    }
   }
 
   source_image_reference {
     publisher = "Canonical"
-    offer     = "UbuntuServer"
-    sku       = "20.04-LTS"
+    offer     = "0001-com-ubuntu-server-jammy"
+    sku       = "22_04-LTS-gen2"
     version   = "latest"
   }
 
@@ -26,73 +41,19 @@ resource "azurerm_linux_virtual_machine_scale_set" "main" {
   }
 
   network_interface {
-    name    = "${local.resource_name}-nic"
-    primary = true
+    name                          = "${var.resource_prefix}-${var.environment}-nic"
+    primary                       = true
+    enable_accelerated_networking = false
 
     ip_configuration {
-      name      = "internal"
-      primary   = true
-      subnet_id = azurerm_subnet.app.id
+      name                                   = "internal"
+      primary                                = true
+      subnet_id                              = azurerm_subnet.app.id
       load_balancer_backend_address_pool_ids = [azurerm_lb_backend_address_pool.main.id]
     }
   }
 
-  custom_data = base64encode(file("${path.module}/user-data.sh"))
-}
-
-resource "azurerm_monitor_autoscale_setting" "main" {
-  name                = "${local.resource_name}-autoscale"
-  resource_group_name = azurerm_resource_group.main.name
-  location            = azurerm_resource_group.main.location
-  target_resource_id  = azurerm_linux_virtual_machine_scale_set.main.id
-
-  profile {
-    name = "default"
-
-    capacity {
-      default = 2
-      minimum = 2
-      maximum = 5
-    }
-
-    rule {
-      metric_trigger {
-        metric_name        = "Percentage CPU"
-        metric_resource_id = azurerm_linux_virtual_machine_scale_set.main.id
-        time_grain         = "PT1M"
-        statistic          = "Average"
-        time_window        = "PT5M"
-        time_aggregation   = "Average"
-        operator           = "GreaterThan"
-        threshold          = 80
-      }
-
-      scale_action {
-        direction = "Increase"
-        type      = "ChangeCount"
-        value     = "1"
-        cooldown  = "PT1M"
-      }
-    }
-
-    rule {
-      metric_trigger {
-        metric_name        = "Percentage CPU"
-        metric_resource_id = azurerm_linux_virtual_machine_scale_set.main.id
-        time_grain         = "PT1M"
-        statistic          = "Average"
-        time_window        = "PT5M"
-        time_aggregation   = "Average"
-        operator           = "LessThan"
-        threshold          = 10
-      }
-
-      scale_action {
-        direction = "Decrease"
-        type      = "ChangeCount"
-        value     = "1"
-        cooldown  = "PT1M"
-      }
-    }
+  lifecycle {
+    ignore_changes = [instances]
   }
 }
