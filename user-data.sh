@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Update system and install Apache
-apt-get update -y
-apt-get install -y apache2
+sudo apt-get update -y
+sudo apt-get install -y apache2
 
 # Create the webpage HTML file
 cat <<EOF > /var/www/html/index.html
@@ -89,7 +89,7 @@ cat <<EOF > /var/www/html/index.html
 EOF
 
 # Restart Apache to apply changes
-systemctl restart apache2
+sudo systemctl restart apache2
 
 # Enable Apache to start on boot
-systemctl enable apache2
+sudo systemctl enable apache2
