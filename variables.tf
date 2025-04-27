@@ -11,7 +11,6 @@ variable "environment" {
 variable "location" {
   description = "The Azure region to deploy to"
   type        = string
-  default     = "eastus"
   validation {
     condition     = contains(["eastus", "westeurope", "southeastasia"], lower(var.location))
     error_message = "Region must be one of: eastus, westeurope, southeastasia"
@@ -40,4 +39,16 @@ variable "mgmt_subnet_prefix" {
   description = "Address prefix for management subnet"
   type        = string
   default     = "10.0.2.0/24"
+}
+
+variable "admin_username" {
+  description = "Admin username for VMs"
+  type        = string
+  default     = "azureuser"
+}
+
+variable "ssh_public_key" {
+  description = "Path to SSH public key"
+  type        = string
+  default     = "~/.ssh/id_rsa.pub"
 }
