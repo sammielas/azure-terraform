@@ -1,11 +1,3 @@
-# vmss.tf
-locals {
-  vm_size = {
-    dev   = "Standard_B1s"
-    stage = "Standard_B2s"
-    prod  = "Standard_B2ms"
-  }
-}
 
 resource "azurerm_orchestrated_virtual_machine_scale_set" "main" {
   name                        = "${var.resource_prefix}-${var.environment}-vmss"
@@ -15,8 +7,8 @@ resource "azurerm_orchestrated_virtual_machine_scale_set" "main" {
   instances                   = 2
   platform_fault_domain_count = 1
 
-  
-   os_profile {
+
+  os_profile {
     linux_configuration {
       disable_password_authentication = true
       admin_username                  = "azureuser"

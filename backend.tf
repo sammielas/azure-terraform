@@ -1,6 +1,15 @@
-# backend.tf (we'll configure this later after creating the storage account)
 terraform {
+
   backend "azurerm" {
-    # Will be filled after storage account creation
+
+    resource_group_name = "tfstate-tbc"
+
+    storage_account_name = "tbc9482"
+
+    container_name = "tfstate"
+
+    key = "dev.terraform.tfstate"
+
   }
+
 }

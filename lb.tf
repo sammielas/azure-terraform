@@ -1,4 +1,4 @@
-# lb.tf (new file)
+
 resource "azurerm_public_ip" "lb" {
   name                = "${var.resource_prefix}-${var.environment}-lb-pip"
   location            = azurerm_resource_group.main.location

@@ -1,2 +1,8 @@
 # Ignore SSH keys
 .ssh/
+backend.sh
+# Terraform files
+.terraform/
+*.tfstate
+*.tfstate.backup
+.terraform.lock.hcl

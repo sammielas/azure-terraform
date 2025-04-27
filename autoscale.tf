@@ -1,4 +1,4 @@
-# autoscale.tf
+
 resource "azurerm_monitor_autoscale_setting" "main" {
   name                = "${var.resource_prefix}-${var.environment}-autoscale"
   location            = azurerm_resource_group.main.location
